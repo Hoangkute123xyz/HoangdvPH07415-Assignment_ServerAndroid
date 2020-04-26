@@ -1,0 +1,309 @@
+<div class="row">
+    <div class="col-3" style="margin-left: 10px">
+        <h2 class="card card-header"><span><i class="fa fa-filter"></i> loại sản phẩm</span></h2>
+        <ul class="list-group list-group-flush">
+            {{#each productTypes as |value|}}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>
+                        <input class="custom-checkbox" style="width: 15px; height: 15px" type="checkbox"
+                               value="{{value._id}}">
+                        {{value.name}}
+                    </span>
+                    {{#if ../isAdmin}}
+                        <span>
+                        <button onclick='fillProductTypeForm({{{json value}}})' data-toggle="modal"
+                                data-target="#modalProductType" class="btn btn-success"><i
+                                class="fa fa-edit"></i> </button>
+                        <button data-toggle="modal" data-target="#modalConfirm" class="btn btn-danger"
+                                onclick="makeConfirm('Bạn có muốn xóa loại sản phẩm này không?','{{value._id}}','/deleteProductType')"><i
+                                class="fa fa-trash"></i> </button>
+                    </span>
+                    {{/if}}
+                </li>
+            {{/each}}
+        </ul>
+
+        {{#if isAdmin}}
+            <button onclick="resetFormProduct()" class="btn btn-primary" style="width: 100%;margin-top: 20px"
+                    data-toggle="modal"
+                    data-target="#modalProductType"><i class="fa fa-plus"></i> Thêm loại
+            </button>
+        {{/if}}
+
+    </div>
+    <div class="col-7">
+        <h2 class="card card-header"><span><i class="fa fa-shopping-bag"></i> Sản phẩm
+            {{#if isAdmin}}
+                <button onclick="resetFormProduct()" type="button" class="btn btn-primary float-right"
+                        data-toggle="modal"
+                        data-target="#modalAddProduct">
+                <i class="fa fa-plus"></i> Thêm sản phẩm
+            </button>
+            {{/if}}
+        </span>
+        </h2>
+        <div class="row">
+            {{#each products as |value|}}
+                <a class="col-md-3">
+                    <div class="product">
+                        <img src="{{value.productThumb}}"
+                             class="product-thumb"/>
+                        {{#if ../isAdmin}}
+                            <div class="product-admin-panel">
+                                <div class="d-flex justify-content-around">
+                                    <button class="btn btn-success"
+                                            data-toggle="modal"
+                                            data-target="#modalAddProduct"
+                                            onclick='fillProductData({{{json value}}})'><i class="fa fa-edit"></i>
+                                    </button>
+                                    <button data-toggle="modal" data-target="#modalConfirm"
+                                            onclick="makeConfirm('Bạn có chắc muốn xóa sản phẩm {{value.name}} này không?','{{value._id}}','/deleteProduct')"
+                                            class="btn btn-danger"><i class="fa fa-trash"></i></button>
+                                </div>
+                            </div>
+                        {{/if}}
+                        <div class="product-infor">
+                            <div class="row">
+                                <span class="col-sm text-center product-name">{{value.name}}</span>
+                                <span class="col-sm text-center product-name">{{value.price}} đ</span>
+                            </div>
+                            <div class="product-infor-detail" style="width: 100%">
+                                <div class="row" style="width: 100%">
+                                    <div class="col-sm text-left" style="width: 100%"><span><i
+                                            class="fa fa-calculator"></i> {{value.amount}}</span></div>
+                                    <div class="col-sm text-right" style="width: 100%;"><i
+                                            class="fa fa-shopping-cart"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {{/each}}
+        </div>
+    </div>
+</div>
+
+{{#if isAdmin}}
+    <!--    MOdal add Product Type-->
+    <div class="modal fade" id="modalProductType" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form id="formProductType" method="post" action="/addProductType" class="modal-content">
+                <input type="hidden" name="_id" id="productTypeId">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productTypeTitle">Thêm loại sản phẩm mới</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group input-group-prepend">
+                        <div class="input-group-text"><i class="fa fa-edit" style="margin-right: 16px"></i> Tên loại
+                        </div>
+                        <input class="form-control" id="productTypeName" name="name" type="text" required>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group input-group-prepend">
+                        <div class="input-group-text"><i class="fa fa-indent" style="margin-right: 16px"></i> Mô tả
+                        </div>
+                        <textarea class="form-control" rows="4" id="productTypeDescription"
+                                  name="description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary" id="btnProductType">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--    Modal add Product-->
+    <div class="modal fade" id="modalAddProduct" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="post" id="formProduct" action="/addProduct" class="modal-content">
+                <input type="hidden" name="_id" id="idProduct"/>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productTitle">Thêm sản phẩm mới</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" onchange="onImagePicked(this)" style="display: none" id="imgPickup"
+                           accept="image/*"/>
+                    <input type="hidden" name="productThumb" id="imgProductData"/>
+                    <div class="d-flex justify-content-center" style="margin-bottom: 12px">
+                        <img onclick="openImagePicker()" src="/img/camera.png" id="imgPicked"
+                             class="img-pickup-product"/>
+                    </div>
+                    <div class="form-group input-group-prepend">
+                        <div class="input-group-text"><i class="fa fa-edit" style="margin-right: 16px"></i> Tên sản phẩm
+                        </div>
+                        <input class="form-control" id="productName" name="name" type="text" required>
+                    </div>
+                    <div class="form-group input-group-prepend">
+                        <div class="input-group-text"><i class="fa fa-edit" style="margin-right: 16px"></i> Loại
+                        </div>
+                        <select class="form-control" id="productType" name="productType">
+                            {{#each productTypes as |value|}}
+                                <option value="{{value._id}}">{{value.name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group input-group-prepend col-sm">
+                            <div class="input-group-text"><i class="fa fa-calculator" style="margin-right: 16px"></i> Sô
+                                lượng
+                            </div>
+                            <input class="form-control" id="amount" name="amount" min=1 step="1" type="number" required>
+                        </div>
+                        <div class="form-group input-group-prepend col-sm">
+                            <div class="input-group-text"><i class="fa fa-dollar-sign" style="margin-right: 16px"></i>
+                                Đơn giá
+                            </div>
+                            <input class="form-control" id="price" min="500" step="500" name="price" type="number"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group input-group-prepend col-sm">
+                            <div class="input-group-text"><i class="fa fa-calendar-check"
+                                                             style="margin-right: 16px"></i> Ngày nhập
+                            </div>
+                            <input class="form-control" id="dayImport" name="dayImport" type="date">
+                        </div>
+                        <div class="form-group input-group-prepend col-sm">
+                            <div class="input-group-text"><i class="fa fa-calendar-times"
+                                                             style="margin-right: 16px"></i> Ngày hết hạn
+                            </div>
+                            <input class="form-control" id="dayExpr" name="dayExpr" type="date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" id="btnProduct" class="btn btn-primary">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!--modal confirm-->
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" id="formConfirm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmTitle"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="idDelete" id="idDelete">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Đồng ý</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        const openImagePicker = () => {
+            $('#imgPickup').trigger('click');
+        };
+        const onImagePicked = (input) => {
+            if (input.files[0]) {
+                const FR = new FileReader();
+                FR.addEventListener('load', e => {
+                    resizeImage(e.target.result, 100, 120);
+                });
+                FR.readAsDataURL(input.files[0]);
+            }
+        };
+        const resizeImage = (data, width, height) => {
+            let canvas = document.createElement("canvas");
+            let ctx = canvas.getContext("2d");
+
+            canvas.width = width;
+            canvas.height = height;
+
+            let image = new Image();
+
+            image.onload = function (e) {
+                ctx.drawImage(image,
+                        0, 0, image.width, image.height,
+                        0, 0, canvas.width, canvas.height
+                );
+                $('#imgProductData').val(canvas.toDataURL().split('data:image/png;base64,')[1]);
+                $('#imgPicked').attr('src', canvas.toDataURL());
+            };
+            image.src = data;
+        };
+        const makeConfirm = (message, id, action) => {
+            $('#formConfirm').attr('action', action);
+            $('#confirmTitle').html(message);
+            $('#idDelete').val(id);
+        };
+        const formProduct = $('#formProduct');
+        const idProduct = $('#idProduct');
+        const productName = $('#productName');
+        const productType = $('#productType');
+        const amount = $('#amount');
+        const price = $('#price');
+        const dayExpr = $('#dayExpr');
+        const dayImport = $('#dayImport');
+        const productTitle = $('#productTitle');
+        const btnProduct = $('#btnProduct');
+
+        const resetFormProduct = () => {
+            formProduct.trigger('reset');
+            formProduct.attr('action', '/addProduct');
+            productTitle.html('Thêm sản phẩm mới');
+            btnProduct.html('Thêm');
+            $('#imgPicked').attr('src','/img/camera.png');
+        };
+        const fillProductData = (data) => {
+            formProduct.trigger('reset');
+            formProduct.attr('action', '/updateProduct');
+            idProduct.val(data._id);
+            productName.val(data.name);
+            productType.val(data.productType);
+            amount.val(data.amount);
+            price.val(data.price);
+            dayExpr.val(data.dayExpr);
+            dayImport.val(data.dayImport);
+            $('#imgPicked').attr('src', data.productThumb);
+            productTitle.html('Sửa sản phẩm');
+            btnProduct.html('Lưu thay đổi');
+        };
+        const productTypeForm = $('#formProductType');
+        const productTypeName = $('#productTypeName');
+        const productTypeId = $('#productTypeId');
+        const productTypeDescription = $('#productTypeDescription');
+        const productTypeTitle = $('#productTypeTitle');
+        const btnProductType = $('#btnProductType');
+
+        const resetProductTypeForm = () => {
+            productTypeForm.trigger('reset');
+            productTypeForm.attr('action', '/addProductType');
+            productTitle.html('Thêm loại sản phẩm');
+            btnProduct.html('Thêm');
+        };
+        const fillProductTypeForm = (data) => {
+            productTypeForm.trigger('reset');
+            console.log(data.name);
+            productTypeTitle.html('Sửa loại sản phẩm');
+            btnProductType.html('Lưu thay đổi');
+            productTypeForm.attr('action', '/updateProductType');
+            productTypeName.val(data.name);
+            productTypeDescription.val(data.description);
+            productTypeId.val(data._id);
+        }
+    </script>
+{{/if}}

@@ -1,0 +1,157 @@
+{{#if isLogin}}
+    <div class="container content">
+        <input onchange="onImagePicked(this)" style="display: none" type="file" accept="image/*" id="imgPickup">
+        <form method="post" id="changeAvatar" action="/changeAvatar">
+            <input type="hidden" name="avatarData" id="avatarData">
+        </form>
+        <div class="rounded mx-auto d-block avatar-block">
+            <img class="avatar" src="{{user.avatar}}"/>
+            <i onclick="openImagePicker()" class="fa fa-camera fa-4x camera-pickup"></i>
+        </div>
+        <h3 class="text-center" style="margin-bottom: 20px"><span>{{user.fullName}} <i data-toggle="modal"
+                                                                                       data-target="#updateModal"
+                                                                                       class="fa fa-edit icon-nav"></i> </span>
+        </h3>
+        <div class="row">
+            <span class="col-sm"><i class="fa fa-user icon-nav"></i> {{user.userName}}</span>
+            <span class="col-sm"><i class="fa fa-phone icon-nav"></i> {{user.phoneNumber}}</span>
+        </div>
+        <div class="row">
+            <span class="col-sm"><i class="fa fa-map icon-nav"></i> {{user.address}}</span>
+            <span class="col-sm"><i class="fa fa-lock icon-nav"></i> Đổi mật khẩu</span>
+        </div>
+    </div>
+    <script type="text/javascript">
+        const openImagePicker = () => {
+            $('#imgPickup').trigger('click');
+        };
+        const onImagePicked = (input) => {
+            if (input.files[0]) {
+                const FR = new FileReader();
+                FR.addEventListener('load', e => {
+                    resizeImage(e.target.result, 100, 100);
+                });
+                FR.readAsDataURL(input.files[0]);
+            }
+        };
+        const resizeImage = (data, width, height) => {
+            let canvas = document.createElement("canvas");
+            let ctx = canvas.getContext("2d");
+
+            canvas.width = width;
+            canvas.height = height;
+
+            let image = new Image();
+
+            image.onload = function (e) {
+                ctx.drawImage(image,
+                        0, 0, image.width, image.height,
+                        0, 0, canvas.width, canvas.height
+                );
+                $('#avatarData').val(canvas.toDataURL().split('data:image/png;base64,')[1]);
+                $('#changeAvatar').submit();
+            };
+            image.src = data;
+        };
+
+        const makeConfirm = (message, id, action) => {
+            $('#formConfirm').attr('action', action);
+            $('#confirmTitle').html(message);
+            $('#idDelete').val(id);
+        };
+    </script>
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" id="formUpdate" action="/updateUser">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Chỉnh sửa thông tin người dùng</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm">
+                                <div class="form-group input-group-prepend">
+                                    <div class="input-group-text"><i class="fa fa-user"></i></div>
+                                    <input class="form-control" id="fullName" name="fullName" type="text"
+                                           placeholder="Họ tên" required value="{{user.fullName}}">
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="form-group input-group-prepend">
+                                    <div class="input-group-text"><i class="fa fa-phone"></i></div>
+                                    <input class="form-control" name="phoneNumber" id="phoneNumber" type="tel"
+                                           placeholder="Số điện thoại" required value="{{user.phoneNumber}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group input-group-prepend">
+                            <div class="input-group-text"><i class="fa fa-map"></i></div>
+                            <input class="form-control" name="address" id="address" type="text"
+                                   placeholder="Địa chỉ" required value="{{user.address}}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" value="register" name="actionRegister">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{{/if}}
+{{#if isAdmin}}
+    <div class="container">
+        <table class="table container">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">Avatar</th>
+                <th scope="col">Tên đăng nhập</th>
+                <th scope="col">Họ tên</th>
+                <th scope="col">Mật khẩu</th>
+                <th scope="col">Số điện thoại</th>
+                <th scope="col">Địa chỉ</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each customers as |value|}}
+                <tr class="table-row">
+                    <td><img style="width: 50px;height: 50px" src="{{value.avatar}}"/></td>
+                    <td>{{value.userName}}</td>
+                    <td>{{value.fullName}}</td>
+                    <td class="hidden-pops">{{value.password}}</td>
+                    <td>{{value.phoneNumber}}</td>
+                    <td>{{value.address}}</td>
+                    <td class="hidden-pops"><button class="btn btn-danger" onclick="makeConfirm('Bạn có chắc muốn xóa tài khoản khách hàng này không','{{value._id}}','/deleteUser')" data-toggle="modal" data-target="#modalConfirm"><i class="fa fa-trash"></i> </button> </td>
+                </tr>
+
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+<!--    MOdal comfirm-->
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" id="formConfirm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmTitle"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="idDelete" id="idDelete">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Đồng ý</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{{/if}}
