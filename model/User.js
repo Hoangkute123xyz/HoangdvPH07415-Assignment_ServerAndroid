@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false,
         default:'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ1P9NIBPbZvN_8V2uZ8cVfm4Rnwwel8_UF_89HT238qUQAOZ1p&usqp=CAU'
+    },
+    cart:{
+        type:[String],
+        required:false,
     }
 });
 

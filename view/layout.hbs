@@ -36,7 +36,10 @@
                 </li>
                 <li class="nav-item">
                     {{#if isLogin}}
-                        <a class="nav-link icon-nav" style="cursor: pointer"><i class="fa fa-shopping-cart fa-2x"></i>
+                        <a href="/myCart" class="nav-link icon-nav" style="cursor: pointer;position: relative"><i class="fa fa-shopping-cart fa-2x"></i>
+                            <div style="position:absolute;right:3px;top:3px;width: 16px;height: 16px; background-color: red;color: white;padding: 10px;border-radius: 50%">
+                                <span style="position: absolute;top: 0px;left: 3px">{{{length user.cart}}}</span>
+                            </div>
                         </a>
                     {{else}}
                         <a class="nav-link icon-nav" data-toggle="modal" data-target="#loginModal"><i
@@ -50,12 +53,15 @@
                         <a class="nav-link dropdown-toggle icon-nav" href="#" id="navbarDropdownMenuLink"
                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <img style="width: 32px;height: 32px;margin-right: 16px;border-radius: 50%"
-                                 src="{{user.avatar}}"/> {{user.fullName}}
+                                 src="{{user.avatar}}"/> <span {{#if isAdmin}}style="color: red;font-weight: bold" {{/if}}>{{user.fullName}} {{#if isAdmin}}(Admin){{/if}}</span>
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="/logout"><i class="fa fa-sign-out icon-nav"></i> Đăng
                                 xuất</a>
                             <a class="dropdown-item" href="/profile"><i class="fa fa-id-card icon-nav"></i> Hồ sơ</a>
+                            {{#if isAdmin}}
+                                <a class="dropdown-item" href="/bill"><i class="fa fa-file-invoice-dollar icon-nav"></i> Hóa đơn</a>
+                            {{/if}}
                         </div>
                     </li>
                 {{else}}

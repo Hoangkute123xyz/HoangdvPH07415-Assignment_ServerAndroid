@@ -7,23 +7,39 @@ let mongoose = require('mongoose');
 let ProductTypeDatabase = require('./database/ProductTypeDataBase');
 let Imgur = require('./component/Imgur');
 let ProductDatabase = require('./database/ProductDatabase');
+let BillDatabase = require('./database/BillDatabase');
+//api module
+
+const UserAPI = require('./api/UserAPI');
+const ProductAPI = require('./api/ProductAPI');
+const BillAPI = require('./api/BillAPI');
+
+
 let app = express();
 mongoose.connect(
     "mongodb+srv://admin:admin@cluster0-z06y9.mongodb.net/hoang?retryWrites=true&w=majority",
     {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true},
     r => {
+        console.log('Database has been connected successfully!')
     }
 );
 app.use(express.static(__dirname + "/public"));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 app.use(cookies());
 app.engine('hbs', hbs({
     layoutsDir: __dirname + '/view',
     defaultLayout: '',
     extname: '.hbs',
     helpers: {
-        json: (context)=> {
+        json: (context) => {
             return JSON.stringify(context)
+        },
+        length: (array) => {
+            if (!array) {
+                return 0
+            } else
+                return array.length;
         }
     }
 }));
@@ -72,12 +88,12 @@ app.post('/', async (req, res) => {
     body.userName = body.userName.toLowerCase();
     if (body.actionRegister) {
         const userCheck = await UserDatabase.getUserByUserName(body.userName);
-        if (!userCheck){
+        if (!userCheck) {
             await UserDatabase.register(body, value => {
                 res.cookie('user', {userName: value.userName, id: value._id, password: value.password});
                 res.redirect('/');
             });
-        } else{
+        } else {
             res.render('home', {layout: 'layout', isExistAccount: true});
         }
 
@@ -96,7 +112,8 @@ app.post('/addProductType', async (req, res) => {
     const user = await UserDatabase.login(req.cookies.user);
     if (user) {
         if (user.role === 2) {
-            await ProductTypeDatabase.addProductType(req.body, value => {})
+            await ProductTypeDatabase.addProductType(req.body, value => {
+            })
         }
     }
     res.redirect('/');
@@ -104,9 +121,15 @@ app.post('/addProductType', async (req, res) => {
 
 app.get('/profile', async (req, res) => {
     const user = await UserDatabase.login(req.cookies.user);
-    const customers =await UserDatabase.getAllUser();
+    const customers = await UserDatabase.getAllUser();
     if (user) {
-        res.render('profile', {layout: 'layout', user: user, isLogin: true, isAdmin: user.role === 2,customers:customers});
+        res.render('profile', {
+            layout: 'layout',
+            user: user,
+            isLogin: true,
+            isAdmin: user.role === 2,
+            customers: customers
+        });
     } else {
         res.redirect('/');
     }
@@ -156,45 +179,159 @@ app.post('/deleteProduct', async (req, res) => {
     }
     res.redirect('/');
 });
-app.post('/updateProduct',async (req,res)=>{
-   const userCookie =req.cookies.user;
-   const user = await UserDatabase.login(userCookie);
-   if (user){
-       if (user.password===userCookie.password && user.role===2){
-           await ProductDatabase.updateProduct(req.body);
-       }
-   }
-   res.redirect('/');
+app.post('/updateProduct', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    if (user) {
+        if (user.password === userCookie.password && user.role === 2) {
+            await ProductDatabase.updateProduct(req.body);
+        }
+    }
+    res.redirect('/');
 });
 
-app.post('/deleteProductType',async (req,res)=>{
-    const userCookie =req.cookies.user;
+app.post('/deleteProductType', async (req, res) => {
+    const userCookie = req.cookies.user;
     const user = await UserDatabase.login(userCookie);
-    if (user){
-        if (user.password===userCookie.password && user.role===2){
+    if (user) {
+        if (user.password === userCookie.password && user.role === 2) {
             await ProductTypeDatabase.deleteProductTypeById(req.body.idDelete);
         }
     }
     res.redirect('/');
 });
-app.post('/updateProductType',async (req,res)=>{
-    const userCookie =req.cookies.user;
+app.post('/updateProductType', async (req, res) => {
+    const userCookie = req.cookies.user;
     const user = await UserDatabase.login(userCookie);
-    if (user){
-        if (user.password===userCookie.password && user.role===2){
+    if (user) {
+        if (user.password === userCookie.password && user.role === 2) {
             await ProductTypeDatabase.updateProductType(req.body);
         }
     }
     res.redirect('/');
 });
 
-app.post('/deleteUser',async (req,res)=>{
-    const userCookie =req.cookies.user;
+app.post('/deleteUser', async (req, res) => {
+    const userCookie = req.cookies.user;
     const user = await UserDatabase.login(userCookie);
-    if (user){
-        if (user.password===userCookie.password && user.role===2){
+    if (user) {
+        if (user.password === userCookie.password && user.role === 2) {
             await UserDatabase.deleteUser(req.body.idDelete);
         }
     }
     res.redirect('/profile');
 });
+
+app.get('/addToCart', async (req, res) => {
+    const result = await UserDatabase.addToCart(req.query.id, req.cookies.user);
+    if (result) {
+        res.render('cart', {layout: 'layout', isLogin: true, user: result.user, products: result.products});
+    } else {
+        res.redirect('/');
+    }
+});
+app.post('/purchar', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    const products = [];
+    user.cart.forEach(value => {
+        products.push({id: value, amount: Number(req.body[value])});
+    });
+    const data = {
+        user: user._id,
+        products: products
+    };
+    if (user) {
+        await BillDatabase.addBill(data);
+        user.cart = [];
+        await UserDatabase.updateUser(user);
+    }
+    res.redirect('/');
+});
+app.get('/myCart', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    const products = await ProductDatabase.getProductByIdArray(user.cart);
+    if (user && products.length > 0) {
+        res.render('cart', {layout: 'layout', isLogin: true, user: user, products: products, isAdmin: user.role === 2});
+    } else {
+        res.redirect('/');
+    }
+});
+app.get('/bill', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    if (user) {
+        if (user.role === 2) {
+            const bills = await BillDatabase.getAllBill();
+            for (j = 0; j < bills.length; j++) {
+                const index = j;
+                const value = bills[j];
+                let totalMoney = 0;
+                const arrayId = [];
+                const arrayAmount = [];
+                value.products.forEach(value => {
+                    arrayId.push(value.id);
+                    arrayAmount.push(value.amount);
+                });
+                const products = await ProductDatabase.getProductByIdArray(arrayId);
+                for (i = 0; i < products.length; i++) {
+                    totalMoney += products[i].price * arrayAmount[i];
+                }
+                bills[index]["totalMoney"] = totalMoney;
+                bills[index]['userProfile'] = await UserDatabase.getUserById(value.user);
+            }
+            res.render('bill', {layout: 'layout', isLogin: true, isAdmin: true, user: user, bills: bills})
+        } else {
+            res.redirect('/');
+        }
+    } else {
+        res.redirect('/');
+    }
+});
+app.post('/checkBill', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    if (user) {
+        if (user.role === 2) {
+            await BillDatabase.checkBill(req.body.idDelete);
+            res.redirect('/bill')
+        } else {
+            res.redirect('/');
+        }
+    } else {
+        res.redirect('/');
+    }
+});
+app.post('/deleteBill', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    if (user) {
+        if (user.role === 2) {
+            await BillDatabase.deleteBill(req.body.idDelete);
+            res.redirect('/bill')
+        } else {
+            res.redirect('/');
+        }
+    } else {
+        res.redirect('/');
+    }
+});
+
+app.post('/deleteCart', async (req, res) => {
+    const userCookie = req.cookies.user;
+    const user = await UserDatabase.login(userCookie);
+    if (user) {
+        await UserDatabase.deleteProductOnCart(req.body.idDelete, user);
+        res.redirect('/myCart');
+    } else {
+        res.redirect('/');
+    }
+});
+
+
+//run api module
+
+UserAPI.create(app);
+ProductAPI.create(app);
+BillAPI.create(app);

@@ -11,7 +11,7 @@ const ProductDatabase = {
                 data.productThumb = value.data.link;
             });
         } else {
-            data.productThumb='/img/camera.png';
+            data.productThumb = '/img/camera.png';
         }
         delete data['_id'];
         const product = new Product(data);
@@ -26,8 +26,8 @@ const ProductDatabase = {
                 data.productThumb = value.data.link;
             });
         } else {
-            const currentProduct =await Product.findOne({_id:data._id});
-            data.productThumb=currentProduct.productThumb;
+            const currentProduct = await Product.findOne({_id: data._id});
+            data.productThumb = currentProduct.productThumb;
         }
         const product = new Product(data);
         await Product.deleteOne({_id: data._id});
@@ -38,6 +38,20 @@ const ProductDatabase = {
     },
     getAllProduct: async () => {
         return await Product.find({}).lean();
+    },
+    getProductById: async (id) => {
+        const product = await Product.findOne({_id: id});
+        if (product)
+            return product;
+        else
+            return false;
+    },
+    getProductByIdArray:async (idArray)=>{
+        const products = await Product.find({_id:{$in:idArray}}).lean();
+        if(products)
+            return products;
+        else
+            return false;
     }
 };
 

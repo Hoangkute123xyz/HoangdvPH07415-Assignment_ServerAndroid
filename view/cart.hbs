@@ -1,0 +1,71 @@
+{{#if isLogin}}
+    <div class="container">
+        <form action="/purchar" method="post">
+            {{#each products as |value|}}
+                <div class="d-flex flex-row mb-3"
+                     style="border-bottom: saddlebrown solid 1px;padding-bottom: 8px;position: relative">
+                    <img src="{{value.productThumb}}" class="p2"/>
+                    <div class="p2" style="margin-left: 16px;">
+                        <span style="font-weight: bold; display: block;font-size: 20px">{{value.name}}</span>
+                        <span style="font-size: 16px; display: block"><i class="fa fa-money"></i> {{value.price}} đ</span>
+                        <span style="font-size: 16px; display: block">
+                        <div class="form-group input-group-prepend col-sm">
+                            <div class="input-group-text"><i class="fa fa-calculator" style="margin-right: 16px"></i>
+                                Số lượng
+                            </div>
+                            <input class="form-control money" onchange="addMoney({{value.price}})" name="{{value._id}}"
+                                   value="1" min=1 step="1" max="{{value.amount}}" contenteditable="false" type="number"
+                                   required>
+                        </div>
+                </span>
+                    </div>
+                    <div style="position: absolute;right: 16px;top: 16px;">
+                        <button onclick="makeConfirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng không?','{{value._id}}','/deleteCart')" type="button" class="btn btn-danger" data-toggle="modal" data-target="#modalConfirm"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>
+            {{/each}}
+            <div class="text-center" id="totalPurchar" style="font-weight: bold;font-size: 20px">Tổng cộng :</div>
+            <div class="d-flex justify-content-center" style="margin-top: 20px"><input class="btn btn-success" type="submit" value="Mua ngay"></div>
+        </form>
+    </div>
+<!--    modal confirm-->
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" id="formConfirm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmTitle"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="idDelete" id="idDelete">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Đồng ý</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        const addMoney = () => {
+            let total = 0;
+            const data = {{{json products}}};
+            const formControl = $('.money');
+            data.forEach((value, index) => {
+                total += Number(formControl[index].value) * value.price;
+            });
+            $('#totalPurchar').html('Tổng cộng: ' + total + ' đ')
+        };
+        addMoney();
+
+
+        const makeConfirm = (message, id, action) => {
+            $('#formConfirm').attr('action', action);
+            $('#confirmTitle').html(message);
+            $('#idDelete').val(id);
+        };
+    </script>
+{{/if}}

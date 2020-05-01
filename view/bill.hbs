@@ -1,0 +1,66 @@
+{{#if isAdmin}}
+    <div class="container">
+        <table class="table">
+            <thead class="thead-dark">
+            <tr>
+                <th>Ảnh</th>
+                <th>Tên đăng nhập</th>
+                <th>Họ tên</th>
+                <th>Tổng tiền</th>
+                <th colspan="2">Trạng thái</th>
+            </tr>
+            </thead>
+            {{#each bills as |value|}}
+                <tr>
+                    <td><img src="{{value.userProfile.avatar}}" style="width: 50px;height: 50px"/></td>
+                    <td>{{value.userProfile.userName}}</td>
+                    <td>{{value.userProfile.fullName}}</td>
+                    <td>{{value.totalMoney}}</td>
+                    {{#if value.isDone}}
+                        <td colspan="2" style="color: #66ff57;font-weight: bold">
+                            <i class="fa fa-check"></i> Đã thanh toán
+                        </td>
+                    {{else}}
+                        <td>
+                            <button class="btn btn-success" data-toggle="modal" data-target="#modalConfirm"
+                                    onclick="makeConfirm('Bạn có chắc xác nhận khách đã thanh toán '+{{value.totalMoney}} +' không?','{{value._id}}','/checkBill')">
+                                <i class="fa fa-check"></i></button>
+                        </td>
+                        <td>
+                            <button data-toggle="modal" data-target="#modalConfirm" class="btn btn-danger" onclick="makeConfirm('Bạn có muốn xóa hóa đơn này không?','{{value._id}}','/deleteBill')"><i class="fa fa-trash"></i></button>
+                        </td>
+                    {{/if}}
+
+                </tr>
+            {{/each}}
+        </table>
+    </div>
+
+    <div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" id="formConfirm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmTitle"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="idDelete" id="idDelete">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Đồng ý</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        const makeConfirm = (message, id, action) => {
+            $('#formConfirm').attr('action', action);
+            $('#confirmTitle').html(message);
+            $('#idDelete').val(id);
+        };
+    </script>
+{{/if}}

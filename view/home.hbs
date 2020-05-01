@@ -72,7 +72,7 @@
                                     <div class="col-sm text-left" style="width: 100%"><span><i
                                             class="fa fa-calculator"></i> {{value.amount}}</span></div>
                                     <div class="col-sm text-right" style="width: 100%;"><i
-                                            class="fa fa-shopping-cart"></i></div>
+                                            class="fa fa-shopping-cart" onclick="addToCart('{{value._id}}')"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -82,6 +82,24 @@
         </div>
     </div>
 </div>
+
+
+{{#if isLogin}}
+    <script type="text/javascript">
+        const addToCart=(productId)=>{
+            let form = document.createElement('form');
+            form.setAttribute("action","/addToCart");
+            form.setAttribute("method","get");
+            let input = document.createElement("input");
+            input.setAttribute("type","hidden");
+            input.setAttribute("name","id");
+            input.value = productId;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit()
+        }
+    </script>
+{{/if}}
 
 {{#if isAdmin}}
     <!--    MOdal add Product Type-->
@@ -297,7 +315,6 @@
         };
         const fillProductTypeForm = (data) => {
             productTypeForm.trigger('reset');
-            console.log(data.name);
             productTypeTitle.html('Sửa loại sản phẩm');
             btnProductType.html('Lưu thay đổi');
             productTypeForm.attr('action', '/updateProductType');
